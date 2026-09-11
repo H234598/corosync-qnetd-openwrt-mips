@@ -1,0 +1,10 @@
+--- a/nss/coreconf/rules.mk
++++ b/nss/coreconf/rules.mk
+@@ -173,7 +173,7 @@ ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_
+ 	$(AR) $(subst /,\\,$(OBJS))
+ else
+-	$(AR) $(OBJS)
++	$(AR) cr $@ $(OBJS)
+ endif
+ 	$(RANLIB) $@
+ 
