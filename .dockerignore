@@ -1,0 +1,6 @@
+# The image currently copies only build.sh; all other inputs are mounted later.
+# Keep Git metadata, deployment state, credentials and outputs out of the context.
+**
+!Dockerfile
+!build.sh
+!.dockerignore

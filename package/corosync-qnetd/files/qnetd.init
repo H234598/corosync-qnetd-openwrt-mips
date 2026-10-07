@@ -4,9 +4,40 @@ START=99
 STOP=10
 USE_PROCD=1
 
+valid_listen_address() {
+	local address="$1" octet
+	local IFS=.
+	# Keep the existing IPv4 listener family. Require canonical dotted decimal
+	# so shorthand, octal and hostname forms cannot resolve to a wildcard.
+	case "$address" in
+		''|*[!0-9.]*|.*|*.|*..*|0.0.0.0) return 1 ;;
+	esac
+	set -- $address
+	[ "$#" -eq 4 ] || return 1
+	for octet in "$@"; do
+		case "$octet" in
+			0|[1-9]|[1-9][0-9]|[1-9][0-9][0-9]) ;;
+			*) return 1 ;;
+		esac
+		[ "$octet" -le 255 ] || return 1
+	done
+}
+
 start_service() {
+	local listen_address
+	config_load corosync-qnetd
+	config_get listen_address main listen_address
+	valid_listen_address "$listen_address" || {
+		echo 'Configure a specific local IPv4 listen_address in /etc/config/corosync-qnetd before starting.' >&2
+		return 1
+	}
+
 	procd_open_instance
-	procd_set_param command /usr/sbin/corosync-qnetd -f -l 198.51.100.10
+	procd_set_param command /usr/sbin/corosync-qnetd -f -l "$listen_address"
 	procd_set_param respawn
 	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger corosync-qnetd
 }

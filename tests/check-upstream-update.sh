@@ -22,11 +22,28 @@ grep -qx 'PKG_RELEASE:=1' "$makefile"
 grep -qx "PKG_HASH:=$expected_hash" "$makefile"
 grep -qx 'updated=true' "$outputs"
 grep -qx 'release_tag=v3.0.5-r1' "$outputs"
+grep -qx 'package_release=1' "$outputs"
 
 : > "$outputs"
 QDEVICE_TAG=v3.0.5 GITHUB_OUTPUT="$outputs" \
 	bash "$repo_dir/scripts/update-upstream.sh" "$makefile"
 grep -qx 'updated=false' "$outputs"
+
+# Package-only changes must publish their own revision at the same upstream version.
+sed -i 's/^PKG_RELEASE:=.*/PKG_RELEASE:=2/' "$makefile"
+: > "$outputs"
+QDEVICE_TAG=v3.0.5 GITHUB_OUTPUT="$outputs" \
+	bash "$repo_dir/scripts/update-upstream.sh" "$makefile"
+grep -qx 'updated=false' "$outputs"
+grep -qx 'package_release=2' "$outputs"
+grep -qx 'release_tag=v3.0.5-r2' "$outputs"
+
+: > "$outputs"
+QDEVICE_TAG=v3.0.6 QDEVICE_ARCHIVE="$archive" GITHUB_OUTPUT="$outputs" \
+	bash "$repo_dir/scripts/update-upstream.sh" "$makefile"
+grep -qx 'PKG_RELEASE:=1' "$makefile"
+grep -qx 'package_release=1' "$outputs"
+grep -qx 'release_tag=v3.0.6-r1' "$outputs"
 
 if QDEVICE_TAG=v3.0.4 bash "$repo_dir/scripts/update-upstream.sh" "$makefile" >/dev/null 2>&1; then
 	echo 'Downgrade was accepted.' >&2

@@ -20,6 +20,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check public content and local configuration
+        run: |
+          python3 scripts/check-public-content.py
+          python3 tests/check-public-content.py
+          bash tests/check-init.sh
+
       - name: Test updater
         run: bash tests/check-upstream-update.sh
 
@@ -74,8 +80,10 @@ jobs:
             git tag "$RELEASE_TAG"
             git push --atomic origin HEAD:master "refs/tags/$RELEASE_TAG"
           elif git rev-parse "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            test "$(git rev-parse origin/master)" = "$(git rev-parse HEAD)"
             test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
           else
+            test "$(git rev-parse origin/master)" = "$(git rev-parse HEAD)"
             git tag "$RELEASE_TAG"
             git push origin "refs/tags/$RELEASE_TAG"
           fi
@@ -87,6 +95,7 @@ jobs:
           RELEASE_TAG: ${{ steps.update.outputs.release_tag }}
           UPSTREAM_TAG: ${{ steps.update.outputs.upstream_tag }}
           VERSION: ${{ steps.update.outputs.version }}
+          PACKAGE_RELEASE: ${{ steps.update.outputs.package_release }}
         run: |
           notes=$(printf '%s\n\n%s\n%s\n%s\n' \
             "Automated build from corosync/corosync-qdevice $UPSTREAM_TAG." \
@@ -94,15 +103,19 @@ jobs:
             'Release created only after package, APK, ELF, dependency, and build-log checks pass.' \
             "Upstream: https://github.com/corosync/corosync-qdevice/releases/tag/$UPSTREAM_TAG")
           gh release create "$RELEASE_TAG" \
-            output/corosync-qnetd-"$VERSION"-r1.apk \
+            output/corosync-qnetd-"$VERSION"-r"$PACKAGE_RELEASE".apk \
             output/sha256sums \
             output/build-info.txt \
             --verify-tag \
-            --title "corosync-qnetd $VERSION-r1 for OpenWrt 25.12.5 MIPS" \
+            --title "corosync-qnetd $VERSION-r$PACKAGE_RELEASE for OpenWrt 25.12.5 MIPS" \
             --notes "$notes"
 
       - uses: actions/upload-artifact@v7
         if: steps.update.outputs.updated == 'true' || steps.release.outputs.needed == 'true'
         with:
           name: corosync-qnetd-${{ steps.update.outputs.version }}-mips_24kc
-          path: output/
+          path: |
+            output/*.apk
+            output/sha256sums
+            output/build-info.txt
+          retention-days: 7

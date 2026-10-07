@@ -4,14 +4,29 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   package:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check public content and local configuration
+        run: |
+          python3 scripts/check-public-content.py
+          python3 tests/check-public-content.py
+          bash tests/check-init.sh
+          bash tests/check-upstream-update.sh
       - run: docker build -t openwrt-corosync .
       - run: bash run-build.sh
       - uses: actions/upload-artifact@v7
         with:
           name: corosync-qnetd-mips_24kc
-          path: output/
+          path: |
+            output/*.apk
+            output/sha256sums
+            output/build-info.txt
+          retention-days: 7

@@ -27,20 +27,29 @@ version=${tag#v}
 }
 
 current=$(sed -n 's/^PKG_VERSION:=//p' "$makefile")
+release=$(sed -n 's/^PKG_RELEASE:=//p' "$makefile")
 [ -n "$current" ] || {
 	echo "PKG_VERSION missing in $makefile" >&2
+	exit 1
+}
+[[ $release =~ ^[1-9][0-9]*$ ]] || {
+	echo "PKG_RELEASE missing or invalid in $makefile" >&2
 	exit 1
 }
 
 output version "$version"
 output upstream_tag "$tag"
-output release_tag "v${version}-r1"
 
 if [ "$version" = "$current" ]; then
+	output package_release "$release"
+	output release_tag "v${version}-r${release}"
 	output updated false
 	echo "Already at corosync-qdevice $version."
 	exit 0
 fi
+
+output package_release 1
+output release_tag "v${version}-r1"
 
 newest=$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -n 1)
 [ "$newest" = "$version" ] || {

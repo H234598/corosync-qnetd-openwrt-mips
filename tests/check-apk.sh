@@ -17,7 +17,10 @@ touch "$tmpdir/root/lib/apk/db/installed" "$tmpdir/root/etc/apk/world"
 pkginfo=$("$apk_bin" --root "$tmpdir/root" --repository "$tmpdir/packages.adb" --allow-untrusted \
 	query --available --fields name,version,arch,depends --format yaml corosync-qnetd)
 grep -Eq '^- name: corosync-qnetd$' <<<"$pkginfo"
-grep -Eq '^  version: 3\.0\.4-r[0-9]+$' <<<"$pkginfo"
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+version=$(sed -n 's/^PKG_VERSION:=//p' "$repo_dir/package/corosync-qnetd/Makefile")
+release=$(sed -n 's/^PKG_RELEASE:=//p' "$repo_dir/package/corosync-qnetd/Makefile")
+grep -Fxq "  version: $version-r$release" <<<"$pkginfo"
 grep -Eq '^  arch: mips_24kc$' <<<"$pkginfo"
 for dependency in libnss nspr nss-utils openssl-util bash coreutils-chown coreutils-stat coreutils-sha1sum procps-ng-ps procps-ng-w openssh-sftp-server; do
 	grep -Eq "^    - ${dependency}([<>=~].*)?$" <<<"$pkginfo"
@@ -31,7 +34,10 @@ if find "$tmpdir/files" -type f | grep -Eq '\.(a|o|la|h)$'; then
 fi
 test -x "$tmpdir/files/usr/sbin/corosync-qnetd-certutil"
 test -x "$tmpdir/files/etc/init.d/corosync-qnetd"
-grep -Fq 'corosync-qnetd -f -l 198.51.100.10' "$tmpdir/files/etc/init.d/corosync-qnetd"
+cmp "$repo_dir/package/corosync-qnetd/files/qnetd.init" "$tmpdir/files/etc/init.d/corosync-qnetd"
+cmp "$repo_dir/package/corosync-qnetd/files/qnetd.config" "$tmpdir/files/etc/config/corosync-qnetd"
+bash "$repo_dir/tests/check-init.sh" "$tmpdir/files/etc/init.d/corosync-qnetd"
+python3 "$repo_dir/scripts/check-public-content.py" --directory "$tmpdir/files"
 if find "$tmpdir/files" -type f -name '*.so*' | grep -q .; then
 	exit 1
 fi
