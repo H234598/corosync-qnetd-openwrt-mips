@@ -5,7 +5,7 @@ documentation examples, not facts about a deployed environment. This historical
 r1 package uses a fixed example bind address; adapt it in a private working copy
 before building or installing, or use the current configurable package.
 
-APK build for `corosync-qnetd 3.0.4` on compatible OpenWrt devices:
+APK build for `corosync-qnetd` on compatible OpenWrt devices:
 
 ```text
 Example management: router.example.org / 192.0.2.10
@@ -38,6 +38,21 @@ bc4307ae2065c0c0b7c84627356e9f3d368a5a803c81552fcb77aa034a843f5a
 `output/` contains `corosync-qnetd-*.apk`, `build.log`, `build-info.txt`, and `sha256sums`. Build checks reject MIPSel, ARM, x86, glibc, `ar cr cr`, wrong APK architecture, undeclared package dependencies, and static/build artifacts.
 
 Clean build: remove `sdk-state/` before `bash run-build.sh`. Do not reuse cache after target or compiler changes.
+
+## Automatic upstream releases
+
+GitHub Actions checks the latest stable `corosync/corosync-qdevice` release daily
+and can also be started manually. For a newer semantic version it downloads the
+exact tag archive, calculates `PKG_HASH`, resets `PKG_RELEASE` to 1, and runs the
+same SDK build and checks used locally. Only a successful build is committed,
+tagged as `v<upstream-version>-r1`, and published with APK, checksum, and build
+metadata. Drafts, prereleases, malformed versions, downgrades, failed builds,
+and branch races produce no release.
+
+If a run stops after pushing its tag but before creating the release, rerunning
+the workflow rebuilds and publishes the missing release. Upstream source changes
+that need patches or a newer NSS/OpenWrt toolchain fail closed and require a
+reviewed repository change.
 
 ## Install on an example router
 

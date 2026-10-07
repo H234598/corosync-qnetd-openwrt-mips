@@ -29,6 +29,7 @@ test -n "$(find "$OUTPUT_DIR" -maxdepth 1 -name 'corosync-qnetd-*.apk' -print -q
 /build/tests/check-apk.sh "$SDK_DIR" "$OUTPUT_DIR"
 
 git_commit=$(git -C /build rev-parse HEAD 2>/dev/null || echo unknown)
+qnetd_version=$(sed -n 's/^PKG_VERSION:=//p' /build/package/corosync-qnetd/Makefile)
 cat > "$OUTPUT_DIR/build-info.txt" <<EOF
 Repository: H234598/corosync-qnetd-openwrt-mips
 Git commit: $git_commit
@@ -41,7 +42,7 @@ Endianness: big endian
 Compiler: GCC 14.3.0 / musl
 NSS: 3.112 (build-time nss-qnetd)
 NSPR: official OpenWrt nspr
-qnetd: 3.0.4
+qnetd: $qnetd_version
 Build date: $(date -u +%FT%TZ)
 EOF
 (cd "$OUTPUT_DIR" && sha256sum ./*.apk > sha256sums)
