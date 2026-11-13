@@ -1,11 +1,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=corosync-qdevice
-PKG_VERSION:=3.0.4
-PKG_RELEASE:=2
+PKG_VERSION:=3.0.5
+PKG_RELEASE:=1
 PKG_SOURCE:=corosync-qdevice-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/corosync/corosync-qdevice/archive/refs/tags/v$(PKG_VERSION)/
-PKG_HASH:=e4bc406c71d4c66b197da3333fe6261703643e4bcad715a91c1706bffc4b51d7
+PKG_HASH:=2604239160372ecae0e8ed5f2eb18417572b1a1738fff02e7dc85aa11f3e298c
 PKG_BUILD_DIR:=$(BUILD_DIR)/corosync-qdevice-$(PKG_VERSION)
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=LICENSE
